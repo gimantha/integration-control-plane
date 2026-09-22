@@ -246,6 +246,34 @@ export default function CloudEditorDeployment(): JSX.Element {
         Your Cloud Editor instance is currently being created.
       </Typography>
       <DeploymentWheel steps={CLOUD_EDITOR_STEPS} activeIndex={activeIndex} />
+      {/* The wheel alone cannot distinguish "still working" from "stopped
+          answering", and this wait has no natural end. Say when it is running
+          long, and when it has run out -- and once it has, hand over the address
+          so the wait is not the only way in. */}
+      {stalled ? (
+        <Alert severity="warning" sx={{ maxWidth: 520, width: '100%' }}>
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            Still not ready
+          </Typography>
+          <Typography variant="body2" sx={{ mb: instance ? 1 : 0 }}>
+            {CLOUD_EDITOR_TIMEOUT_MESSAGE}. It may still come up — you can open it directly:
+          </Typography>
+          {instance ? (
+            <Button variant="outlined" size="small" onClick={() => redirect(instance.url)}>
+              Open the editor
+            </Button>
+          ) : null}
+          {instance ? (
+            <Typography variant="caption" component="p" sx={{ mt: 1, wordBreak: 'break-all' }}>
+              {displayableEditorUrl(instance.url)}
+            </Typography>
+          ) : null}
+        </Alert>
+      ) : slowNotice ? (
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          This is taking longer than usual. A first editor in a new project can take a couple of minutes.
+        </Typography>
+      ) : null}
     </Box>
   );
 }
