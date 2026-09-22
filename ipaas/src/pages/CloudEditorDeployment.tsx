@@ -22,7 +22,7 @@ import { Alert, Box, Button, Typography } from '@wso2/oxygen-ui';
 import { useCreateCodeServer, useEditorKeepAlive, useEditorReady, useGetOrCreateSampleRegistry } from '../hooks/useCloudEditor';
 import { useComponentPods } from '../hooks/useRuntime';
 import { CLOUD_EDITOR_POLL_MS, CLOUD_EDITOR_READY_TIMEOUT_MS, CLOUD_EDITOR_SLOW_NOTICE_MS, CLOUD_EDITOR_STEPS, CLOUD_EDITOR_TIMEOUT_MESSAGE, CLOUD_EDITOR_TIMEOUT_MS } from '../constants/cloudEditor';
-import { displayableEditorUrl, highestPodPhase } from '../utils/cloudEditor';
+import { highestPodPhase } from '../utils/cloudEditor';
 import DeploymentWheel from '../components/CloudEditor/DeploymentWheel';
 import type { ChoreoSampleImage, CloudEditorStepKey, CodeServerInstance, DeploymentParams } from '../types/cloudEditor';
 
@@ -255,19 +255,10 @@ export default function CloudEditorDeployment(): JSX.Element {
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
             Still not ready
           </Typography>
-          <Typography variant="body2" sx={{ mb: instance ? 1 : 0 }}>
-            {CLOUD_EDITOR_TIMEOUT_MESSAGE}. It may still come up — you can open it directly:
+          <Typography variant="body2">
+            {CLOUD_EDITOR_TIMEOUT_MESSAGE}. The page keeps watching, so leave it open if you want to
+            wait; otherwise close this tab and try again.
           </Typography>
-          {instance ? (
-            <Button variant="outlined" size="small" onClick={() => redirect(instance.url)}>
-              Open the editor
-            </Button>
-          ) : null}
-          {instance ? (
-            <Typography variant="caption" component="p" sx={{ mt: 1, wordBreak: 'break-all' }}>
-              {displayableEditorUrl(instance.url)}
-            </Typography>
-          ) : null}
         </Alert>
       ) : slowNotice ? (
         <Typography variant="body2" color="text.secondary" textAlign="center">
