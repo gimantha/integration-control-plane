@@ -63,8 +63,8 @@ import {
   ClipboardList,
   Clock,
   Cog,
-  CreditCard,
   Cpu,
+  CreditCard,
   Database,
   DatabaseZap,
   Diamond,
@@ -88,8 +88,8 @@ import {
   Puzzle,
   Recycle,
   Rocket,
-  ScanEye,
   Scale,
+  ScanEye,
   ScrollText,
   Search,
   Server,
@@ -99,9 +99,10 @@ import {
   Sparkles,
   Terminal,
   Truck,
+  Waypoints,
+  Webhook,
   Workflow,
   X,
-  Webhook,
 } from '@wso2/oxygen-ui-icons-react';
 import FeaturePreviewModal from '../components/FeaturePreview/FeaturePreviewModal';
 import { useProject, useProjectByHandler, useProjects } from '../hooks/useProjects';
@@ -1009,6 +1010,15 @@ function AppLayoutInner(): JSX.Element {
                             </Sidebar.ItemIcon>
                             <Sidebar.ItemLabel>Retrieval</Sidebar.ItemLabel>
                           </Sidebar.Item>
+                        </Sidebar.Item>
+                      )}
+
+                      {!IS_CLOUD && (
+                        <Sidebar.Item id="org-context-engines">
+                          <Sidebar.ItemIcon>
+                            <Waypoints size={20} />
+                          </Sidebar.ItemIcon>
+                          <Sidebar.ItemLabel>Context Engines</Sidebar.ItemLabel>
                         </Sidebar.Item>
                       )}
                     </Sidebar.Category>,

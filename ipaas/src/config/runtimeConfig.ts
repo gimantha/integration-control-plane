@@ -66,6 +66,11 @@ interface RuntimeConfig {
   INTEGRATION_BUILDER_LLM_MODEL?: string;
   INTEGRATION_BUILDER_MAX_TOKENS?: string;
   INTEGRATION_BUILDER_CENTRAL_GRAPHQL_URL?: string;
+  /** Devant Context Engine REST base (the app calls `<base>/v1/...`). Unset disables the feature. */
+  CONTEXT_ENGINE_API_URL?: string;
+  /** Local-development only: a static engine token when the engine cannot verify platform tokens yet. */
+  CONTEXT_ENGINE_API_TOKEN?: string;
+  ENABLE_CONTEXT_ENGINE_FEATURE?: string | boolean;
 }
 
 export interface ApiConfig {
@@ -152,6 +157,12 @@ export interface ApiConfig {
   integrationBuilderMaxTokens: number;
   /** AI Integration Builder central GraphQL URL for connectors. */
   integrationBuilderCentralGraphqlUrl: string;
+  /** Devant Context Engine REST base. Empty when the engine is not configured for this deployment. */
+  contextEngineApiUrl: string;
+  /** Dev-only static bearer token for the engine; unset sends the platform token. */
+  contextEngineApiToken?: string;
+  /** Gates the org-level Context Engines feature. */
+  enableContextEngineFeature?: boolean;
 }
 
 // Extend window interface
@@ -203,6 +214,8 @@ const DEFAULT_CONFIG: ApiConfig = {
   integrationBuilderMaxTokens: 1024,
   integrationBuilderCentralGraphqlUrl: 'https://api.dev-central.ballerina.io/2.0/graphql',
   internalMarketplaceUrl: 'https://apis.preview-dv.choreo.dev/marketplace/0.1.0',
+  // Dev server proxies this path to a locally running engine (see vite.config.ts).
+  contextEngineApiUrl: import.meta.env.DEV ? '/context-engine-proxy' : '',
 };
 
 /**
@@ -280,6 +293,9 @@ export async function loadConfig(): Promise<void> {
       integrationBuilderMaxTokens: parsePositiveInt(config.INTEGRATION_BUILDER_MAX_TOKENS, DEFAULT_CONFIG.integrationBuilderMaxTokens),
       integrationBuilderCentralGraphqlUrl: config.INTEGRATION_BUILDER_CENTRAL_GRAPHQL_URL || 'https://api.dev-central.ballerina.io/2.0/graphql',
       internalMarketplaceUrl: `${choreoBase}/marketplace/0.1.0`,
+      contextEngineApiUrl: config.CONTEXT_ENGINE_API_URL ? trim(config.CONTEXT_ENGINE_API_URL) : DEFAULT_CONFIG.contextEngineApiUrl,
+      contextEngineApiToken: config.CONTEXT_ENGINE_API_TOKEN?.trim() || undefined,
+      enableContextEngineFeature: config.ENABLE_CONTEXT_ENGINE_FEATURE === 'true' || config.ENABLE_CONTEXT_ENGINE_FEATURE === true,
     };
 
     console.info('✓ Runtime configuration loaded from config.json');
