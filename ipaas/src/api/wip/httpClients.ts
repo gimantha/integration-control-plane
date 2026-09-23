@@ -35,6 +35,10 @@ interface HttpClientOptions {
   /** Return the raw text when a 2xx body isn't JSON (e.g. a plain "OK" from DELETE/PUT).
    * Off by default — unexpected non-JSON bodies throw. */
   tolerateNonJson?: boolean;
+  /** A bearer credential for a service that does not accept the platform token
+   * (e.g. a locally run Context Engine in static-token mode). When it returns a
+   * value the request bypasses `authenticatedFetch`; otherwise the platform token is sent. */
+  bearerToken?: () => string | null | undefined;
 }
 
 // Factory to create HTTP clients for different services
@@ -49,12 +53,13 @@ export function createHttpClient(getBaseUrl: () => string, clientOptions?: HttpC
       },
     };
 
-    let res = await authenticatedFetch(url, init);
+    const overrideToken = clientOptions?.bearerToken?.();
+    let res = overrideToken ? await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${overrideToken}` } }) : await authenticatedFetch(url, init);
 
     if (res.status === 403 && clientOptions?.on403) {
       const shouldRetry = await clientOptions.on403(res);
       if (shouldRetry) {
-        res = await authenticatedFetch(url, init);
+        res = overrideToken ? await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${overrideToken}` } }) : await authenticatedFetch(url, init);
       }
     }
 
@@ -142,6 +147,17 @@ export const ragBackendClient = createHttpClient(() => {
   if (!base) throw new Error('RAG backend base URL is not configured');
   return base;
 });
+
+// Devant Context Engine — context spaces, sources, grants, queries. Sends the
+// platform token unless a dev-only static token is configured in runtime config.
+export const contextEngineClient = createHttpClient(
+  () => {
+    const base = window.API_CONFIG?.contextEngineApiUrl;
+    if (!base) throw new Error('Context Engine API URL is not configured');
+    return base;
+  },
+  { bearerToken: () => window.API_CONFIG?.contextEngineApiToken || null },
+);
 
 // Choreo Insights — GraphQL-like query endpoint on a separate host
 export const insightsClient = createHttpClient(() => `${window.API_CONFIG.insightsBaseUrl}/insights/1.0.0`);

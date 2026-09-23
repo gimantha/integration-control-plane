@@ -120,6 +120,20 @@ import type { Environment, CloudDataPlane, EnvironmentInput, EnvironmentTemplate
 import type { StopScheduleInput, ExecutionConfigs, TaskExecution, ExecutionLogEntry, ExecutionLogWindow, ExecutionArgument, UpdateJobConfigsInput, TriggerComponentInput, TriggerRunResult, RuntimeArgument } from '../types/executions';
 import type { SubscriptionList, ComponentLimits } from '../types/subscription';
 import type { ConfigGroup, ConfigGroupNameAvailability, ConfigGroupUsage, CreateConfigGroupRequest, EditConfigGroupRequest } from '../types/configGroups';
+import type {
+  ContextEngine,
+  ContextEngineDetail,
+  ContextEngineExposure,
+  ContextGrant,
+  ContextJob,
+  ContextJobHandle,
+  ContextPrincipal,
+  ContextQueryInput,
+  ContextQueryResult,
+  CreateContextEngineInput,
+  CreateContextEngineResult,
+  PutContextGrantInput,
+} from '../types/contextEngine';
 import type { Certificate, CreateCertificateInput } from '../types/certificates';
 import type {
   ChoreoConnectionRequest,
@@ -765,6 +779,22 @@ export interface ConfigGroupsApi {
   getConfigGroupUsage(configGroupId: string): Promise<ConfigGroupUsage>;
 }
 
+// Context Engines (Devant Context Engine service). wip-only for now; cloud/icp stubs throw.
+export interface ContextEngineApi {
+  listContextEngines(): Promise<ContextEngine[]>;
+  getContextEngine(engineId: string): Promise<ContextEngineDetail>;
+  createContextEngine(input: CreateContextEngineInput): Promise<CreateContextEngineResult>;
+  deleteContextEngine(engineId: string): Promise<void>;
+  updateContextEngineExposure(engineId: string, exposure: ContextEngineExposure): Promise<ContextEngineExposure>;
+  rebuildContextEngine(engineId: string): Promise<ContextJobHandle>;
+  getContextJob(jobId: string): Promise<ContextJob>;
+  queryContextEngine(input: ContextQueryInput): Promise<ContextQueryResult>;
+  listContextGrants(engineId: string): Promise<ContextGrant[]>;
+  putContextGrant(input: PutContextGrantInput): Promise<ContextGrant>;
+  deleteContextGrant(engineId: string, grantId: string): Promise<void>;
+  getContextPrincipal(): Promise<ContextPrincipal>;
+}
+
 // Connections (dependency-config service). wip-only for now; cloud/icp stubs throw.
 export interface ConnectionsApi {
   listConnections(params: ListConnectionsParams): Promise<ConnectionListingRecord[]>;
@@ -981,6 +1011,7 @@ export interface AppApi {
   subscriptions: SubscriptionsApi;
   certificates: CertificatesApi;
   configGroups: ConfigGroupsApi;
+  contextEngine: ContextEngineApi;
   connections: ConnectionsApi;
   auditLogs: AuditLogsApi;
   platformServices: PlatformServicesApi;

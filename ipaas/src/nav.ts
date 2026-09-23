@@ -280,6 +280,7 @@ const NAV_ALL: Record<Level, NavEntry[]> = {
     { key: 'rag-ingestion', navId: 'org-scheduled-ingestion', segment: 'rag/scheduled-ingestion', parent: 'org-rag' },
     { key: 'rag-service', navId: 'org-service', segment: 'rag/service', parent: 'org-rag' },
     { key: 'rag-retrieval', navId: 'org-retrieval', segment: 'rag/retrieval', parent: 'org-rag' },
+    { key: 'context-engines', navId: 'org-context-engines', segment: 'context-engines' },
     { key: 'databases', navId: 'org-databases', segment: 'admin/databases', parent: 'org-admin' },
     { key: 'vector-databases', navId: 'org-vector-databases', segment: 'admin/vector-databases', parent: 'org-admin' },
     { key: 'message-brokers', navId: 'org-message-brokers', segment: 'admin/message-brokers', parent: 'org-admin' },
@@ -373,6 +374,8 @@ const CLOUD_HIDDEN_NAV_IDS = new Set([
   'org-scheduled-ingestion',
   'org-service',
   'org-retrieval',
+  // Context Engines
+  'org-context-engines',
   // Develop
   'org-develop',
   'proj-develop',

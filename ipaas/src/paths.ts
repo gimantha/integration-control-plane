@@ -292,3 +292,21 @@ export function buildGitHubOAuthUrl(redirectUri: string, clientId: string, state
 export function buildGitHubAppInstallUrl(slug: string): string {
   return `https://github.com/apps/${slug}/installations/new`;
 }
+
+// ---------------------------------------------------------------------------
+// Context Engines (org-level)
+// ---------------------------------------------------------------------------
+
+import type { ContextEngineTabKey } from './types/contextEngine';
+
+export function contextEnginesUrl(orgHandler: string): string {
+  return `/organizations/${orgHandler}/context-engines`;
+}
+
+export function newContextEngineUrl(orgHandler: string): string {
+  return `/organizations/${orgHandler}/context-engines/new`;
+}
+
+export function contextEngineUrl(orgHandler: string, engineId: string, tab: ContextEngineTabKey = 'overview'): string {
+  return `/organizations/${orgHandler}/context-engines/${encodeURIComponent(engineId)}/${tab}`;
+}
