@@ -124,6 +124,7 @@ import type {
   ContextEngine,
   ContextEngineDetail,
   ContextEngineExposure,
+  ContextEngineProgress,
   ContextGrant,
   ContextJob,
   ContextJobHandle,
@@ -787,6 +788,7 @@ export interface ContextEngineApi {
   deleteContextEngine(engineId: string): Promise<void>;
   updateContextEngineExposure(engineId: string, exposure: ContextEngineExposure): Promise<ContextEngineExposure>;
   rebuildContextEngine(engineId: string): Promise<ContextJobHandle>;
+  getContextEngineProgress(engineId: string): Promise<ContextEngineProgress>;
   getContextJob(jobId: string): Promise<ContextJob>;
   queryContextEngine(input: ContextQueryInput): Promise<ContextQueryResult>;
   listContextGrants(engineId: string): Promise<ContextGrant[]>;
