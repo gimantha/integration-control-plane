@@ -22,6 +22,7 @@ import type {
   ContextEngine,
   ContextEngineDetail,
   ContextEngineExposure,
+  ContextEngineProgress,
   ContextGrant,
   ContextJob,
   ContextJobHandle,
@@ -43,6 +44,7 @@ export const createContextEngine = (_input: CreateContextEngineInput): Promise<C
 export const deleteContextEngine = (_engineId: string): Promise<void> => ni('deleteContextEngine');
 export const updateContextEngineExposure = (_engineId: string, _exposure: ContextEngineExposure): Promise<ContextEngineExposure> => ni('updateContextEngineExposure');
 export const rebuildContextEngine = (_engineId: string): Promise<ContextJobHandle> => ni('rebuildContextEngine');
+export const getContextEngineProgress = (_engineId: string): Promise<ContextEngineProgress> => ni('getContextEngineProgress');
 export const getContextJob = (_jobId: string): Promise<ContextJob> => ni('getContextJob');
 export const queryContextEngine = (_input: ContextQueryInput): Promise<ContextQueryResult> => ni('queryContextEngine');
 export const listContextGrants = (_engineId: string): Promise<ContextGrant[]> => ni('listContextGrants');
