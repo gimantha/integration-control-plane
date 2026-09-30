@@ -126,12 +126,15 @@ public isolated function epochFromTimestamp(string column) returns string {
 // Get database-specific TIMESTAMPDIFF function
 // MySQL: TIMESTAMPDIFF(unit, start, end)
 // MSSQL: DATEDIFF(unit, start, end)
-// PostgreSQL: EXTRACT(EPOCH FROM (end - start))
+// PostgreSQL: CAST(TRUNC(EXTRACT(EPOCH FROM (end - start))) AS BIGINT)
+// The result is an integer on every database, so callers can map it to an `int` field.
 public isolated function getTimestampDiffSeconds(string startColumn, string endTimestamp) returns string {
     if dbType == MSSQL {
         return string `DATEDIFF(SECOND, ${startColumn}, ${endTimestamp})`;
     } else if dbType == POSTGRESQL {
-        return string `EXTRACT(EPOCH FROM (${endTimestamp} - ${startColumn}))`;
+        // EXTRACT(EPOCH ...) is numeric (PG 14+) or double precision (PG 12/13), which fails
+        // to map to an `int` record field. Truncate toward zero like TIMESTAMPDIFF(SECOND, ...).
+        return string `CAST(TRUNC(EXTRACT(EPOCH FROM (${endTimestamp} - ${startColumn}))) AS BIGINT)`;
     } else if dbType == ORACLE {
         return string `ROUND((CAST(${endTimestamp} AS DATE) - CAST(${startColumn} AS DATE)) * 86400)`;
     } else {
