@@ -1224,6 +1224,7 @@ input ArtifactStatusChangeInput {
   artifactType: String!
   artifactName: String!
   status: ArtifactState!
+  environmentId: String
 }
 
 type ArtifactTracingChangeResponse {
@@ -1300,6 +1301,7 @@ type ArtifactTriggerResponse {
 input ArtifactTriggerInput {
   componentId: String!
   taskName: String!
+  environmentId: String
 }
 
 type ArtifactTypeCount {

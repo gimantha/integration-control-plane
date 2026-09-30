@@ -220,7 +220,7 @@ function EntryPointDetail({ selected, onOpenDrawerTab }: { selected: SelectedArt
   const handleConfirmTrigger = () => {
     setTriggerConfirmDialogOpen(false);
     triggerTask.mutate(
-      { componentId, taskName: artifactName },
+      { envId, componentId, taskName: artifactName },
       {
         onSuccess: () => {
           setTriggerSuccessMessage(`Successfully triggered task ${artifactName}`);

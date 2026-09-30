@@ -2681,6 +2681,9 @@ public type ArtifactStatusChangeInput record {|
     string artifactType; // e.g., "proxy-service", "endpoint", "inbound-endpoint", "message-processor"
     string artifactName;
     ArtifactState status;
+    // The environment the change is made in. Without it the change reaches every environment
+    // the caller may act in, which is kept only for callers that predate the field.
+    string environmentId?;
 |};
 
 public enum Status {
@@ -2738,6 +2741,8 @@ public type ArtifactStatisticsChangeResponse record {|
 public type ArtifactTriggerInput record {|
     string componentId;
     string taskName; // Name of the task to trigger
+    // The environment to trigger the task in; see ArtifactStatusChangeInput.environmentId
+    string environmentId?;
 |};
 
 // Response for artifact trigger

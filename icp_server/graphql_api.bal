@@ -262,6 +262,28 @@ isolated function canonicalArtifactType(string componentId, types:Runtime[] runt
     return artifactType;
 }
 
+// Keep only the runtimes in environments where the user may change this integration's
+// artifacts. A role scoped to one environment passes the integration-level check, so an
+// artifact-control mutation that fans out across environments must check each one, or a
+// dev-only user reaches prod runtimes they cannot even list.
+isolated function filterRuntimesByArtifactControlAccess(string userId, string projectId,
+        string componentId, types:Runtime[] runtimes) returns types:Runtime[]|error {
+    map<boolean> envAllowed = {};
+    types:Runtime[] permitted = [];
+    foreach types:Runtime runtime in runtimes {
+        string envId = runtime.environment.id;
+        if !envAllowed.hasKey(envId) {
+            types:AccessScope scope = auth:buildScopeFromContext(projectId, integrationId = componentId, envId = envId);
+            envAllowed[envId] = check auth:hasAnyPermission(userId,
+                    [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope);
+        }
+        if envAllowed.get(envId) {
+            permitted.push(runtime);
+        }
+    }
+    return permitted;
+}
+
 // Group runtimes by environment, upsert desired state per env, and reconcile.
 // Returns [successCount, failedCount] across all envs.
 isolated function reconcilePerEnv(types:Runtime[] runtimes, string componentId,
@@ -3078,7 +3100,9 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        string? environmentId = input?.environmentId;
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = environmentId);
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
             return error("Insufficient permissions to change artifact status");
@@ -3106,8 +3130,9 @@ service /graphql on graphqlListener {
             };
         }
 
-        types:Runtime[] runtimes = check storage:getRuntimes((), "MI", (), component.projectId, input.componentId);
-        if runtimes.length() == 0 {
+        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", environmentId, component.projectId,
+                input.componentId);
+        if allRuntimes.length() == 0 {
             log:printWarn("No MI runtimes found for component", componentId = input.componentId);
             return {
                 status: "FAILED",
@@ -3116,6 +3141,11 @@ service /graphql on graphqlListener {
                 failedCount: 0,
                 details: []
             };
+        }
+        types:Runtime[] runtimes = check filterRuntimesByArtifactControlAccess(userContext.userId,
+                component.projectId, input.componentId, allRuntimes);
+        if runtimes.length() == 0 {
+            return error("Insufficient permissions to change artifact status");
         }
 
         // Fold away any desired state left under a non-canonical spelling of this artifact type
@@ -3150,7 +3180,8 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = input.environmentId);
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
             return error("Insufficient permissions to change artifact tracing");
@@ -3192,7 +3223,8 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = input.environmentId);
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
             return error("Insufficient permissions to change artifact statistics");
@@ -3343,7 +3375,9 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        string? environmentId = input?.environmentId;
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = environmentId);
 
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
@@ -3352,10 +3386,11 @@ service /graphql on graphqlListener {
             return error("Insufficient permissions to trigger task");
         }
 
-        // Get all MI runtimes for this component
-        types:Runtime[] runtimes = check storage:getRuntimes((), "MI", (), component.projectId, input.componentId);
+        // The MI runtimes of the requested environment, or of every environment when none is given
+        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", environmentId, component.projectId,
+                input.componentId);
 
-        if runtimes.length() == 0 {
+        if allRuntimes.length() == 0 {
             log:printWarn("No MI runtimes found for component", componentId = input.componentId);
             return {
                 status: "FAILED",
@@ -3364,6 +3399,13 @@ service /graphql on graphqlListener {
                 failedCount: 0,
                 details: []
             };
+        }
+        types:Runtime[] runtimes = check filterRuntimesByArtifactControlAccess(userContext.userId,
+                component.projectId, input.componentId, allRuntimes);
+        if runtimes.length() == 0 {
+            log:printWarn("Attempt to trigger task without permission in any environment",
+                    userId = userContext.userId, componentId = input.componentId, taskName = input.taskName);
+            return error("Insufficient permissions to trigger task");
         }
 
         log:printInfo("Creating MI control commands for task trigger",
