@@ -302,7 +302,7 @@ export function useUpdateArtifactStatus() {
   return useMutation({
     mutationFn: (input: ArtifactStatusInput) =>
       gql<{ updateArtifactStatus: { status: string; message: string } }>(UPDATE_ARTIFACT_STATUS, {
-        input: { componentId: input.componentId, artifactType: toBackendArtifactType(input.artifactType), artifactName: input.artifactName, status: input.status },
+        input: { componentId: input.componentId, environmentId: input.envId, artifactType: toBackendArtifactType(input.artifactType), artifactName: input.artifactName, status: input.status },
       }).then((d) => d.updateArtifactStatus),
     onMutate: async (input) => {
       const scope = (q: { queryKey: readonly unknown[] }) => q.queryKey[2] === input.envId && q.queryKey[3] === input.componentId;
@@ -443,6 +443,7 @@ const TRIGGER_ARTIFACT = `
   }`;
 
 export interface TriggerTaskInput {
+  envId: string;
   componentId: string;
   taskName: string;
 }
@@ -455,6 +456,7 @@ export function useTriggerTask() {
         input: {
           componentId: input.componentId,
           taskName: input.taskName,
+          environmentId: input.envId,
         },
       }).then((d) => d.triggerArtifact),
     onSuccess: () => {

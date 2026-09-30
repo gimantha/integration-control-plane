@@ -3100,7 +3100,9 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        string? environmentId = input?.environmentId;
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = environmentId);
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
             return error("Insufficient permissions to change artifact status");
@@ -3128,7 +3130,8 @@ service /graphql on graphqlListener {
             };
         }
 
-        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", (), component.projectId, input.componentId);
+        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", environmentId, component.projectId,
+                input.componentId);
         if allRuntimes.length() == 0 {
             log:printWarn("No MI runtimes found for component", componentId = input.componentId);
             return {
@@ -3372,7 +3375,9 @@ service /graphql on graphqlListener {
             return error("Integration not found");
         }
 
-        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId);
+        string? environmentId = input?.environmentId;
+        types:AccessScope scope = auth:buildScopeFromContext(component.projectId, integrationId = input.componentId,
+                envId = environmentId);
 
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
@@ -3381,8 +3386,9 @@ service /graphql on graphqlListener {
             return error("Insufficient permissions to trigger task");
         }
 
-        // Get all MI runtimes for this component
-        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", (), component.projectId, input.componentId);
+        // The MI runtimes of the requested environment, or of every environment when none is given
+        types:Runtime[] allRuntimes = check storage:getRuntimes((), "MI", environmentId, component.projectId,
+                input.componentId);
 
         if allRuntimes.length() == 0 {
             log:printWarn("No MI runtimes found for component", componentId = input.componentId);
