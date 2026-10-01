@@ -24,7 +24,10 @@ import type {
   ContextEngineExposure,
   ContextEngineProgress,
   ContextRecordStatus,
+  ContextSource,
+  ContextSourceConfig,
   IngestFileInput,
+  UpdateContextSourceInput,
   RecordEventInput,
   ContextGrant,
   ContextJob,
@@ -51,6 +54,8 @@ export const getContextEngineProgress = (_engineId: string): Promise<ContextEngi
 export const ingestContextFile = (_input: IngestFileInput): Promise<ContextJobHandle> => ni('ingestContextFile');
 export const sendContextRecordEvent = (_input: RecordEventInput): Promise<ContextJobHandle> => ni('sendContextRecordEvent');
 export const getContextRecordStatus = (_sourceId: string, _recordId: string): Promise<ContextRecordStatus> => ni('getContextRecordStatus');
+export const addContextSource = (_engineId: string, _source: ContextSourceConfig): Promise<ContextSource> => ni('addContextSource');
+export const updateContextSource = (_input: UpdateContextSourceInput): Promise<ContextSource> => ni('updateContextSource');
 export const getContextJob = (_jobId: string): Promise<ContextJob> => ni('getContextJob');
 export const queryContextEngine = (_input: ContextQueryInput): Promise<ContextQueryResult> => ni('queryContextEngine');
 export const listContextGrants = (_engineId: string): Promise<ContextGrant[]> => ni('listContextGrants');

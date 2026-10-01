@@ -126,7 +126,10 @@ import type {
   ContextEngineExposure,
   ContextEngineProgress,
   ContextRecordStatus,
+  ContextSource,
+  ContextSourceConfig,
   IngestFileInput,
+  UpdateContextSourceInput,
   RecordEventInput,
   ContextGrant,
   ContextJob,
@@ -795,6 +798,8 @@ export interface ContextEngineApi {
   ingestContextFile(input: IngestFileInput): Promise<ContextJobHandle>;
   sendContextRecordEvent(input: RecordEventInput): Promise<ContextJobHandle>;
   getContextRecordStatus(sourceId: string, recordId: string): Promise<ContextRecordStatus>;
+  addContextSource(engineId: string, source: ContextSourceConfig): Promise<ContextSource>;
+  updateContextSource(input: UpdateContextSourceInput): Promise<ContextSource>;
   getContextJob(jobId: string): Promise<ContextJob>;
   queryContextEngine(input: ContextQueryInput): Promise<ContextQueryResult>;
   listContextGrants(engineId: string): Promise<ContextGrant[]>;
