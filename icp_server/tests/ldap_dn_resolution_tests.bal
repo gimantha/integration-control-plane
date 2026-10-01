@@ -45,6 +45,13 @@ function testGetDNFromEntryMultiValued() {
     test:assertEquals(getDNFromEntry(entry), "cn=first,dc=example,dc=com");
 }
 
+// Test: the DN is returned unchanged, keeping an escaped trailing space (RFC 4514)
+@test:Config {}
+function testGetDNFromEntryKeepsEscapedTrailingSpace() {
+    ldap:Entry entry = {"entryDN": "cn=jdoe,ou=users,o=Example\\ "};
+    test:assertEquals(getDNFromEntry(entry), "cn=jdoe,ou=users,o=Example\\ ");
+}
+
 // Test: no DN attribute (or a blank one) returns nil so the caller falls back
 @test:Config {}
 function testGetDNFromEntryMissingOrBlank() {

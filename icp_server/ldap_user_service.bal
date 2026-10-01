@@ -483,7 +483,7 @@ isolated function getDNFromEntry(ldap:Entry entry) returns string? {
             }
             string? dn = value is string ? value : (value is string[] && value.length() > 0 ? value[0] : ());
             if dn is string && dn.trim() != "" {
-                return dn.trim();
+                return dn;
             }
         }
     }
