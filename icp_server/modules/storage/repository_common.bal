@@ -21,6 +21,24 @@ import ballerina/jwt;
 import ballerina/log;
 import ballerina/sql;
 
+// Upper bounds for handlers, matching the handler/name columns in the init scripts.
+public const int MAX_PROJECT_HANDLER_LENGTH = 200;
+public const int MAX_ENVIRONMENT_HANDLER_LENGTH = 200;
+public const int MAX_COMPONENT_HANDLER_LENGTH = 64;
+
+// Handlers are used as URL path segments by the console, so they are restricted to the
+// slug the console generates from a display name: lowercase letters and digits, separated
+// by single hyphens. Anything else (spaces, '/', '..', '!') makes the entity unreachable.
+public isolated function validateHandler(string label, string handler, int maxLength) returns error? {
+    if handler.length() > maxLength {
+        return error(string `${label} must be at most ${maxLength} characters`);
+    }
+    if !re `^[a-z0-9]+(-[a-z0-9]+)*$`.isFullMatch(handler) {
+        return error(string `${label} '${handler}' is invalid. Use only lowercase letters, numbers and single hyphens, `
+            + "starting and ending with a letter or number (for example, 'order-service')");
+    }
+}
+
 // Artifact type identifier constants
 const string ARTIFACT_TYPE_API = "api";
 const string ARTIFACT_TYPE_PROXY_SERVICE = "proxy-service";

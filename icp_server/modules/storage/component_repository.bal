@@ -117,6 +117,8 @@ public isolated function createComponent(types:ComponentInput component) returns
     string? componentSubType = component?.componentSubType;
 
     check validateIntegrationMetadata(componentTypeValue, displayType, componentSubType);
+    // The component name is its handler in console URLs.
+    check validateHandler("Component name", component.name, MAX_COMPONENT_HANDLER_LENGTH);
 
     sql:ParameterizedQuery insertQuery = `INSERT INTO components (component_id, project_id, name, display_name, description, component_type, display_type, component_sub_type, created_by)
                                           VALUES (${componentId}, ${component.projectId}, ${component.name}, ${displayName}, ${component.description}, ${componentTypeValue}, ${displayType}, ${componentSubType}, ${component.createdBy})`;

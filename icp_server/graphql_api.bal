@@ -2270,6 +2270,12 @@ service /graphql on graphqlListener {
             }
         }
 
+        // Only a changed handler is validated, so environments created before handlers were
+        // validated can still be edited without being forced to rename.
+        if handler is string && handler.trim() != currentEnv.handler {
+            check storage:validateHandler("Environment handler", handler.trim(), storage:MAX_ENVIRONMENT_HANDLER_LENGTH);
+        }
+
         check storage:updateEnvironment(environmentId, name, handler, description, critical);
         types:Environment? updated = check storage:getEnvironmentById(environmentId);
         storage:logAuditEvent(storage:AUDIT_ENVIRONMENT_UPDATE, userId = userContext.userId,
@@ -2546,7 +2552,7 @@ service /graphql on graphqlListener {
             return error("Insufficient permissions to create component in this project");
         }
 
-        // Validate component name format (3-64 characters, alphanumeric, hyphens, underscores)
+        // Validate component name length (3-64 characters); storage:createComponent enforces the format
         if component.name.length() < 3 || component.name.length() > 64 {
             return error("Component name must be between 3 and 64 characters");
         }
@@ -3079,6 +3085,14 @@ service /graphql on graphqlListener {
         if !check auth:hasAnyPermission(userContext.userId,
                 [auth:PERMISSION_INTEGRATION_EDIT, auth:PERMISSION_INTEGRATION_MANAGE], scope) {
             return error("Insufficient permissions to update this component");
+        }
+
+        // The name is the component handler. Validate it only when it changes, as for environments.
+        if targetName is string {
+            types:Component? current = check storage:getComponentById(targetComponentId);
+            if current is () || targetName != current.name {
+                check storage:validateHandler("Component name", targetName, storage:MAX_COMPONENT_HANDLER_LENGTH);
+            }
         }
 
         // Call the existing backend method to maintain consistency
