@@ -30,7 +30,8 @@ import icp_server.utils;
 configurable boolean ldapUserStoreEnabled = false;
 
 // Port for the LDAP authentication adapter.
-// To use this adapter, set authBackendUrl = "https://<host>:<ldapAuthServicePort>" in the ICP config.
+// When ldapUserStoreEnabled is true the ICP server calls this adapter at ldapAuthBackendUrl,
+// which defaults to https://localhost:<ldapAuthServicePort>; authBackendUrl is not used.
 // The default user service (default_user_service.bal) runs on port 9447; use a different port here.
 configurable int ldapAuthServicePort = 9450;
 configurable string ldapAuthServiceHost = "0.0.0.0";

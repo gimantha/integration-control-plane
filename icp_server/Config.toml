@@ -8,6 +8,12 @@
 # serverPort = 9446
 # serverHost = "0.0.0.0"
 
+# Externally reachable URL of the ICP console (scheme + host + port, no trailing slash).
+# The console's backend URLs (config.json) and the default CORS allowlist are derived from it.
+# Defaults to https://localhost:<serverPort> (http:// when sslEnabled = false). Set it to the
+# URL users open in the browser when that differs, e.g. behind a proxy or on a remote host.
+# publicBaseUrl = "https://icp.example.com:9446"
+
 # =============================================================================
 # OPERATIONAL CONFIGURATION
 # =============================================================================
@@ -47,7 +53,8 @@ enableMetrics = true
 # =============================================================================
 # Authentication backend service settings
 # URL of the authentication backend service (can be custom implementation)
-authBackendUrl = "https://localhost:9447"
+# Defaults to https://localhost:<authServicePort> (9447), the bundled user service.
+# authBackendUrl = "https://localhost:9447"
 
 
 # =============================================================================

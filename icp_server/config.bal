@@ -29,11 +29,13 @@ configurable int runtimeListenerPort = 9445;
 configurable string serverHost = "0.0.0.0";
 configurable string organization = "WSO2 Inc.";
 
+configurable boolean sslEnabled = true;
+
 // Publicly reachable base URL of the ICP server (scheme + host + port, no trailing slash).
 // Frontend-facing backend URLs and the CORS allowlist are derived from this by default.
-configurable string publicBaseUrl = "https://localhost:9446";
-
-configurable boolean sslEnabled = true;
+// The default follows serverPort and sslEnabled; set it explicitly when the console is
+// reached through a different host or port (a proxy, load balancer or remote host).
+configurable string publicBaseUrl = (sslEnabled ? "https" : "http") + "://localhost:" + serverPort.toString();
 configurable string keystorePath = check file:joinPath("..", "conf", "security", "wso2carbon.jks");
 configurable string keystorePassword = "wso2carbon";
 configurable string truststorePath = check file:joinPath("..", "conf", "security", "client-truststore.jks");
@@ -127,8 +129,10 @@ configurable boolean enableRefreshTokenRotation = true; // Rotate refresh token 
 configurable int maxRefreshTokensPerUser = 10; // Maximum number of active refresh tokens per user (0 = unlimited)
 
 // Authentication backend configuration 
-configurable string authBackendUrl = "https://localhost:9447";
-configurable string ldapAuthBackendUrl = "https://localhost:9450";
+// Defaults follow the ports of the bundled user services (always TLS).
+configurable string authBackendUrl = "https://localhost:" + authServicePort.toString();
+// Used instead of authBackendUrl when ldapUserStoreEnabled is true
+configurable string ldapAuthBackendUrl = "https://localhost:" + ldapAuthServicePort.toString();
 // SSO (OIDC) configuration
 configurable boolean ssoEnabled = false;
 configurable string ssoIssuer = "";
