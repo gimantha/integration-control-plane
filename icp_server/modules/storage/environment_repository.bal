@@ -284,6 +284,7 @@ public isolated function createEnvironment(types:EnvironmentInput environment) r
         log:printWarn("Environment creation attempted without handler for environment: " + environment.name);
         return error("Environment handler is required");
     }
+    check validateHandler("Environment handler", handler, MAX_ENVIRONMENT_HANDLER_LENGTH);
 
     // Check for duplicate handler
     sql:ParameterizedQuery handlerCheckQuery = `SELECT COUNT(*) as cnt FROM environments WHERE handler = ${handler}`;
