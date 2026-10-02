@@ -97,16 +97,47 @@ final readonly & string[] MANAGEMENT_ARTIFACT_TYPES = [
     ARTIFACT_TYPE_SEQUENCE
 ];
 
+// MI artifact types whose management API accepts a trace or statistics change. message-processor
+// and task accept only a status change, and MI refuses trace or statistics for them.
+final readonly & string[] TRACE_STATISTICS_ARTIFACT_TYPES = [
+    ARTIFACT_TYPE_PROXY_SERVICE,
+    ARTIFACT_TYPE_ENDPOINT,
+    ARTIFACT_TYPE_INBOUND_ENDPOINT,
+    ARTIFACT_TYPE_API,
+    ARTIFACT_TYPE_SEQUENCE,
+    ARTIFACT_TYPE_TEMPLATE
+];
+
+// Each known artifact type keyed by its spelling with case and separators removed, so the
+// PascalCase names MI and the console display ("ProxyService", "InboundEndpoint") resolve to the
+// same canonical type as the kebab-case ones. "RestApi" is the console's name for an api.
+final readonly & map<string> ARTIFACT_TYPE_BY_COMPACT_NAME = {
+    "proxyservice": ARTIFACT_TYPE_PROXY_SERVICE,
+    "endpoint": ARTIFACT_TYPE_ENDPOINT,
+    "inboundendpoint": ARTIFACT_TYPE_INBOUND_ENDPOINT,
+    "api": ARTIFACT_TYPE_API,
+    "restapi": ARTIFACT_TYPE_API,
+    "sequence": ARTIFACT_TYPE_SEQUENCE,
+    "template": ARTIFACT_TYPE_TEMPLATE,
+    "messageprocessor": ARTIFACT_TYPE_MESSAGE_PROCESSOR,
+    "task": ARTIFACT_TYPE_TASK,
+    "localentry": ARTIFACT_TYPE_LOCAL_ENTRY,
+    "dataservice": ARTIFACT_TYPE_DATA_SERVICE,
+    "connector": ARTIFACT_TYPE_CONNECTOR
+};
+
 // Canonical form of an artifact type, as getManagementPath matches it. Callers that persist or
 // echo an artifact type should normalize first so what is stored and reported is what matched.
+// A type ICP does not know is only trimmed and lowercased, so callers can still reject it by name.
 public isolated function normalizeArtifactType(string artifactType) returns string {
-    return artifactType.toLowerAscii().trim();
+    string lowered = artifactType.toLowerAscii().trim();
+    return ARTIFACT_TYPE_BY_COMPACT_NAME[re `[-_\s]`.replaceAll(lowered, "")] ?: lowered;
 }
 
 // Returns the management API path for the given artifact type.
 // When statusOnly=true, only artifact types that support the status field are matched;
 // proxy-service, endpoint, message-processor, task, and inbound-endpoint support status (active/inactive/trigger),
-// while api and sequence only support trace/statistics; template does not support these controls.
+// while api, sequence and template only support trace/statistics (see supportsTraceAndStatistics).
 isolated function getManagementPath(string artifactType, boolean statusOnly = false) returns string? {
     log:printDebug("Resolving management path", artifactType = artifactType, statusOnly = statusOnly);
     match normalizeArtifactType(artifactType) {
@@ -156,6 +187,18 @@ public isolated function statusChangeSupportedTypes() returns string {
         where getManagementPath(artifactType, true) is string
         select artifactType;
     return string:'join(", ", ...supported);
+}
+
+// Returns whether the given artifact type supports a trace or statistics change. Like
+// supportsStatusChange, callers must reject other types up front: miControlRequest builds no
+// request for them, so a dispatch would report SUCCESS and change nothing.
+public isolated function supportsTraceAndStatistics(string artifactType) returns boolean {
+    return TRACE_STATISTICS_ARTIFACT_TYPES.indexOf(normalizeArtifactType(artifactType)) is int;
+}
+
+// Comma-separated list of artifact types that support a trace or statistics change, for error messages.
+public isolated function traceAndStatisticsSupportedTypes() returns string {
+    return string:'join(", ", ...TRACE_STATISTICS_ARTIFACT_TYPES);
 }
 
 // Record type for artifact lookup
@@ -218,45 +261,29 @@ public isolated function miControlRequest(string artifactType, string artifactNa
             "status": status
         };
         artifactPath = managementPath;
-    } else if action == types:ARTIFACT_ENABLE_TRACING || action == types:ARTIFACT_DISABLE_TRACING {
-        // Tracing change: enable/disable - use artifact-specific management API paths
-        string tracing = action == types:ARTIFACT_ENABLE_TRACING ? TOGGLE_ENABLE : TOGGLE_DISABLE;
-
+    } else if action == types:ARTIFACT_ENABLE_TRACING || action == types:ARTIFACT_DISABLE_TRACING
+            || action == types:ARTIFACT_ENABLE_STATISTICS || action == types:ARTIFACT_DISABLE_STATISTICS {
+        // Tracing or statistics change: enable/disable - use artifact-specific management API paths.
+        // Checked against the same list the mutations validate with, so a type they accept always
+        // has a request here, and a type MI would refuse (message-processor, task) never does.
+        if !supportsTraceAndStatistics(artifactType) {
+            return ();
+        }
         string? managementPath = getManagementPath(artifactType);
         if managementPath is () {
             return ();
         }
 
-        payload = {
-            "name": artifactName,
-            "trace": tracing
-        };
-        artifactPath = managementPath;
-    } else if action == types:ARTIFACT_ENABLE_STATISTICS || action == types:ARTIFACT_DISABLE_STATISTICS {
-        // Statistics change: enable/disable - use artifact-specific management API paths
-        string statistics = action == types:ARTIFACT_ENABLE_STATISTICS ? TOGGLE_ENABLE : TOGGLE_DISABLE;
-
-        // Map artifact type to the correct management API path
-        string? managementPath = getManagementPath(artifactType);
-        if managementPath is () {
-            return ();
-        }
-
-        // Build payload based on artifact type
+        boolean isTracing = action == types:ARTIFACT_ENABLE_TRACING || action == types:ARTIFACT_DISABLE_TRACING;
+        boolean enable = action == types:ARTIFACT_ENABLE_TRACING || action == types:ARTIFACT_ENABLE_STATISTICS;
+        map<json> body = {"name": artifactName};
         if normalizeArtifactType(artifactType) == ARTIFACT_TYPE_TEMPLATE {
-            // Templates require a 'type' field (sequence or endpoint)
-            payload = {
-                "name": artifactName,
-                "type": ARTIFACT_TYPE_SEQUENCE, // Default to sequence template
-                "statistics": statistics
-            };
-        } else {
-            payload = {
-                "name": artifactName,
-                "statistics": statistics
-            };
+            // Templates require a 'type' field (sequence or endpoint) for tracing and statistics alike;
+            // MI answers "Unsupported operation" without it
+            body["type"] = ARTIFACT_TYPE_SEQUENCE; // Default to sequence template
         }
-
+        body[isTracing ? "trace" : "statistics"] = enable ? TOGGLE_ENABLE : TOGGLE_DISABLE;
+        payload = body;
         artifactPath = managementPath;
     } else {
         return ();

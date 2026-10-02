@@ -85,6 +85,13 @@ function init() returns error? {
     // Initialize the runtime scheduler
     check initRuntimeScheduler();
 
+    // Desired state an earlier version accepted but could never dispatch would otherwise warn on
+    // every reconcile pass. A failure here must not keep the server from starting.
+    error? repaired = storage:repairMIDesiredState();
+    if repaired is error {
+        log:printWarn("Failed to repair MI desired state", 'error = repaired);
+    }
+
     logMIAccessMode();
     if miTunnelEnabled {
         // Artifact controls are built and dispatched in the storage and sync modules, which
