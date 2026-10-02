@@ -3201,6 +3201,23 @@ service /graphql on graphqlListener {
             return error("Insufficient permissions to change artifact tracing");
         }
 
+        // Reject types MI cannot trace before anything is persisted, as updateArtifactStatus does.
+        // No request can be built for them, so proceeding would report SUCCESS and store a
+        // desired state that every reconcile pass fails to dispatch.
+        string normalizedType = storage:normalizeArtifactType(input.artifactType);
+        if !storage:supportsTraceAndStatistics(normalizedType) {
+            log:printWarn("Rejected tracing change for unsupported artifact type",
+                    artifactType = normalizedType, artifactName = input.artifactName,
+                    componentId = input.componentId);
+            return {
+                status: types:FAILED,
+                message: string `Tracing change is not supported for artifact type '${normalizedType}'. Supported types: ${storage:traceAndStatisticsSupportedTypes()}.`,
+                successCount: 0,
+                failedCount: 0,
+                details: []
+            };
+        }
+
         types:Runtime[] runtimes = check storage:getRuntimes((), "MI", input.environmentId, component.projectId, input.componentId);
         if runtimes.length() == 0 {
             log:printWarn("No MI runtimes found for component", componentId = input.componentId);
@@ -3246,11 +3263,19 @@ service /graphql on graphqlListener {
 
         // Validate the canonical spelling, not the caller's. Matching the raw value here would
         // reject a supported type sent as "Proxy-Service" before it could be normalized.
+        // The list and the message come from the same source as dispatch, so they cannot disagree.
         string normalizedType = storage:normalizeArtifactType(input.artifactType);
-        string[] supportedTypes = ["proxy-service", "endpoint", "api", "sequence", "inbound-endpoint"];
-        boolean isSupported = supportedTypes.indexOf(normalizedType) != ();
-        if !isSupported {
-            return error(string `Artifact type '${normalizedType}' does not support statistics. Supported types: ProxyService, Endpoint, RestApi, Sequence, InboundEndpoint`);
+        if !storage:supportsTraceAndStatistics(normalizedType) {
+            log:printWarn("Rejected statistics change for unsupported artifact type",
+                    artifactType = normalizedType, artifactName = input.artifactName,
+                    componentId = input.componentId);
+            return {
+                status: types:FAILED,
+                message: string `Statistics change is not supported for artifact type '${normalizedType}'. Supported types: ${storage:traceAndStatisticsSupportedTypes()}.`,
+                successCount: 0,
+                failedCount: 0,
+                details: []
+            };
         }
 
         types:Runtime[] runtimes = check storage:getRuntimes((), "MI", input.environmentId, component.projectId, input.componentId);
