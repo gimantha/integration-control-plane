@@ -38,6 +38,9 @@ import type {
   CreateContextEngineInput,
   CreateContextEngineResult,
   PutContextGrantInput,
+  ContextEngineModels,
+  ContextEvidence,
+  UpdateContextModelsInput,
 } from '../../types/contextEngine';
 
 const ni = (name: string): never => {
@@ -47,7 +50,8 @@ const ni = (name: string): never => {
 export const listContextEngines = (): Promise<ContextEngine[]> => ni('listContextEngines');
 export const getContextEngine = (_engineId: string): Promise<ContextEngineDetail> => ni('getContextEngine');
 export const createContextEngine = (_input: CreateContextEngineInput): Promise<CreateContextEngineResult> => ni('createContextEngine');
-export const deleteContextEngine = (_engineId: string): Promise<void> => ni('deleteContextEngine');
+export const deleteContextEngine = (_engineId: string): Promise<ContextJobHandle | null> => ni('deleteContextEngine');
+export const updateContextModels = (_input: UpdateContextModelsInput): Promise<ContextEngineModels> => ni('updateContextModels');
 export const updateContextEngineExposure = (_engineId: string, _exposure: ContextEngineExposure): Promise<ContextEngineExposure> => ni('updateContextEngineExposure');
 export const rebuildContextEngine = (_engineId: string): Promise<ContextJobHandle> => ni('rebuildContextEngine');
 export const getContextEngineProgress = (_engineId: string): Promise<ContextEngineProgress> => ni('getContextEngineProgress');
@@ -58,6 +62,9 @@ export const addContextSource = (_engineId: string, _source: ContextSourceConfig
 export const updateContextSource = (_input: UpdateContextSourceInput): Promise<ContextSource> => ni('updateContextSource');
 export const getContextJob = (_jobId: string): Promise<ContextJob> => ni('getContextJob');
 export const queryContextEngine = (_input: ContextQueryInput): Promise<ContextQueryResult> => ni('queryContextEngine');
+export const getContextQuery = (_queryId: string): Promise<ContextQueryResult> => ni('getContextQuery');
+export const getContextEvidence = (_evidenceId: string): Promise<ContextEvidence> => ni('getContextEvidence');
+export const getContextPermissions = (_resourceId: string): Promise<string[]> => ni('getContextPermissions');
 export const listContextGrants = (_engineId: string): Promise<ContextGrant[]> => ni('listContextGrants');
 export const putContextGrant = (_input: PutContextGrantInput): Promise<ContextGrant> => ni('putContextGrant');
 export const deleteContextGrant = (_engineId: string, _grantId: string): Promise<void> => ni('deleteContextGrant');

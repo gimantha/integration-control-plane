@@ -90,6 +90,7 @@ const RagRetrieval = lazyPage(() => import('../pages/RagRetrieval'));
 const OrgContextEngines = lazyPage(() => import('../pages/OrgContextEngines'));
 const CreateContextEngine = lazyPage(() => import('../pages/CreateContextEngine'));
 const ContextEngineDetail = lazyPage(() => import('../pages/ContextEngineDetail'));
+const ContextEvidence = lazyPage(() => import('../pages/ContextEvidence'));
 const OrgVectorDatabases = lazyPage(() => import('../pages/OrgVectorDatabases'));
 const CreateVectorDatabaseServer = lazyPage(() => import('../pages/CreateVectorDatabaseServer'));
 const VectorDatabaseServerDetail = lazyPage(() => import('../pages/VectorDatabaseServerDetail'));
@@ -246,6 +247,7 @@ const routes: AppRoute[] = [
                 { path: 'organizations/:orgHandler/context-engines/new', element: createElement(RouteErrorBoundary, null, createElement(withScope(CreateContextEngine, ['organizations']))) },
                 { path: 'organizations/:orgHandler/context-engines/:engineId', element: createElement(RouteErrorBoundary, null, createElement(withScope(ContextEngineDetail, ['organizations']))) },
                 { path: 'organizations/:orgHandler/context-engines/:engineId/:tab', element: createElement(RouteErrorBoundary, null, createElement(withScope(ContextEngineDetail, ['organizations']))) },
+                { path: 'organizations/:orgHandler/context-engines/:engineId/evidence/:evidenceId', element: createElement(RouteErrorBoundary, null, createElement(withScope(ContextEvidence, ['organizations']))) },
               ]),
               ...hideable(IS_CLOUD, 'organizations', [
                 { path: 'organizations/:orgHandler/admin/databases', element: createElement(withScope(OrgDatabases, ['organizations'])) },

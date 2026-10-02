@@ -137,6 +137,9 @@ import type {
   ContextPrincipal,
   ContextQueryInput,
   ContextQueryResult,
+  ContextEngineModels,
+  ContextEvidence,
+  UpdateContextModelsInput,
   CreateContextEngineInput,
   CreateContextEngineResult,
   PutContextGrantInput,
@@ -786,12 +789,13 @@ export interface ConfigGroupsApi {
   getConfigGroupUsage(configGroupId: string): Promise<ConfigGroupUsage>;
 }
 
-// Context Engines (Devant Context Engine service). wip-only for now; cloud/icp stubs throw.
+// Context Engines (Context Engine service). wip-only for now; cloud/icp stubs throw.
 export interface ContextEngineApi {
   listContextEngines(): Promise<ContextEngine[]>;
   getContextEngine(engineId: string): Promise<ContextEngineDetail>;
   createContextEngine(input: CreateContextEngineInput): Promise<CreateContextEngineResult>;
-  deleteContextEngine(engineId: string): Promise<void>;
+  deleteContextEngine(engineId: string): Promise<ContextJobHandle | null>;
+  updateContextModels(input: UpdateContextModelsInput): Promise<ContextEngineModels>;
   updateContextEngineExposure(engineId: string, exposure: ContextEngineExposure): Promise<ContextEngineExposure>;
   rebuildContextEngine(engineId: string): Promise<ContextJobHandle>;
   getContextEngineProgress(engineId: string): Promise<ContextEngineProgress>;
@@ -802,6 +806,9 @@ export interface ContextEngineApi {
   updateContextSource(input: UpdateContextSourceInput): Promise<ContextSource>;
   getContextJob(jobId: string): Promise<ContextJob>;
   queryContextEngine(input: ContextQueryInput): Promise<ContextQueryResult>;
+  getContextQuery(queryId: string): Promise<ContextQueryResult>;
+  getContextEvidence(evidenceId: string): Promise<ContextEvidence>;
+  getContextPermissions(resourceId: string): Promise<string[]>;
   listContextGrants(engineId: string): Promise<ContextGrant[]>;
   putContextGrant(input: PutContextGrantInput): Promise<ContextGrant>;
   deleteContextGrant(engineId: string, grantId: string): Promise<void>;
