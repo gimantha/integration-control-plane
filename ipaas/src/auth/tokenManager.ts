@@ -167,7 +167,8 @@ export async function getOrRefreshAsgardeoToken(): Promise<string | null> {
   }
 }
 
-function isAccessTokenExpired(): boolean {
+/** Whether the platform access token is past, or within a minute of, its expiry; true when none is stored. */
+export function isAccessTokenExpired(): boolean {
   const expiresAt = localStorage.getItem(TOKEN_EXPIRES_AT_KEY);
   if (!expiresAt) return true;
   return Date.now() >= Number(expiresAt) - EXPIRY_BUFFER_MS;
