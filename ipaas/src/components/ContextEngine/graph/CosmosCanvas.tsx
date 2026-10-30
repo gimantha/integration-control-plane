@@ -129,6 +129,9 @@ export default function CosmosCanvas({
   framePointsRef.current = frame;
   const fitToRef = useRef(fitTo);
   fitToRef.current = fitTo;
+  // How many points the graph holds right now. The library makes its position texture only once it has
+  // a point, and reading positions back before then throws, so the camera is never fitted to no points.
+  const pointCountRef = useRef(0);
   // A framing that arrives while the layout is still moving is run once it settles.
   const pendingFrameRef = useRef<(() => void) | null>(null);
   const lastFocusRef = useRef<number | null>(null);
@@ -248,7 +251,8 @@ export default function CosmosCanvas({
     const graph = graphRef.current;
     const host = hostRef.current;
     const to = fitToRef.current;
-    if (!graph) return;
+    // With no points there is nothing to fit, and fitView would read positions the library never made.
+    if (!graph || !pointCountRef.current) return;
     if (!to || !to.length || !host) {
       graph.fitView(duration, 0.15, true);
       return;
@@ -439,6 +443,7 @@ export default function CosmosCanvas({
   useEffect(() => {
     const graph = graphRef.current;
     if (!graph || !ready) return;
+    pointCountRef.current = buffers.positions.length / 2;
     graph.setPointPositions(buffers.positions, true);
     graph.setPointColors(buffers.colors);
     graph.setPointSizes(buffers.sizes);
@@ -452,7 +457,8 @@ export default function CosmosCanvas({
     graph.setClusterPositions(buffers.clusterPositions);
     graph.setPointClusterStrength(buffers.clusterStrengths);
     graph.render(1);
-    follow();
+    // An empty graph, such as one whose records were all deleted, has no layout to follow.
+    if (pointCountRef.current) follow();
     scheduleLabels();
   }, [buffers, ready, follow, scheduleLabels]);
 
